@@ -1,15 +1,9 @@
 import numpy as np
 
 
-
-dados = list()
-
 # Recolher dados experimentais do usuários
-while True:
-    dados.append(float(input("Insira uma medição: ")))
-    continuar = input("Continuar inserindo dados? S/N ")
-    if continuar == "N":
-        break
+dados = [float(i) for i in input("Insira uma lista de dados: ").split()]
+
 
 # Calcula a média e desvio padrão da média
 dados = np.array(dados)
