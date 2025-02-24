@@ -30,4 +30,17 @@ tabela_formatada = tabulate(df, headers='keys', tablefmt='grid', showindex=False
 print(tabela_formatada)
 
 
+# Para Cálculo de MMQ
+# Considere P_man como f(x) e o Inverso do Volume como x
 
+p_man = np.array([0.02, 0.03, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4])
+
+linear = (np.sum(p_man)*np.sum(inverso_do_volume**2) - np.sum(inverso_do_volume)*np.sum(inverso_do_volume*p_man)) / (p_man.size*np.sum(inverso_do_volume**2)-np.sum(inverso_do_volume)**2)
+
+angular = (p_man.size*np.sum(p_man*inverso_do_volume)-np.sum(p_man)*np.sum(inverso_do_volume))/(p_man.size*np.sum(inverso_do_volume**2)-np.sum(inverso_do_volume)**2)
+
+print(f'A reta é {angular}x + {linear}')
+
+
+
+# Criação do Gráfico
