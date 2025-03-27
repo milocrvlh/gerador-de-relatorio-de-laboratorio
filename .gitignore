@@ -1,3 +1,14 @@
 # Ignorar ambientes virtuais
 .venv/
+
+
+
 grafico.png
+
+wls.aux
+wls.fdb_latexmk
+wls.fls
+wls.log
+wls.pdf
+wls.synctex.gz
+wls.tex

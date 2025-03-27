@@ -89,6 +89,72 @@ class Linearizacao(DadosExperimentais):
         plt.subplots_adjust(left=0.14, right=0.92, bottom=0.15, top=0.90)
         plt.savefig("grafico.png", dpi=1000, bbox_inches='tight', pad_inches=1) 
         plt.show()
+    
+    
+    def gerar_relatorio_latex_wls(self, fmt=".5e"):
+
+        latex_template = """
+        %
+        \\documentclass[12pt]{{article}} % Especifica o tamanho da fonte
+
+        %%----------------PACOTES-------------------------------------------%%
+        \\usepackage[margin=1in]{{geometry}} % Define todas as margens em 1 polegada
+        \\usepackage[pdftex]{{graphicx}} % Permite a inclusão de arquivos de imagem
+        \\usepackage{{amssymb}} % Acesso a símbolos matemáticos extras
+        \\usepackage{{amsmath}} % Acesso a símbolos matemáticos extras
+        \\usepackage{{wrapfig}} % Permite o texto envolver figuras
+        \\usepackage{{calc}} % Dá acesso a uma calculadora básica 
+        %%-------------------------------------------------------------------%%
+        %%-----------FORMATAÇÃO----------------------------------------------%%
+        \\pagestyle{{empty}} % Garante que nenhum número de página seja impresso
+        \\parskip = 0.2 in % Coloca um pouco de espaço entre parágrafos 
+        \\parindent = 0.0 in % Garante que não haja indentação para parágrafos
+        %%-------------------------------------------------------------------%%
+
+        \\begin{{document}}
+
+        {conteudo}
+
+        \\end{{document}} 
+        %%-------------------------------------------------------------------%%
+
+        """
+
+        # Gera o conteúdo LaTeX
+        latex_weights = " \\\\\n".join(
+            [fr"$\frac{{1}}{{\sigma^2_{{{i}}}}} = {weight:{fmt}}$" 
+             for i, weight in enumerate(self.weights(), start=1)]
+        )        
+        conteudo = fr"""
+        \section*{{Resultado do WLS}}
+
+        \subsubsection*{{Pesos}}
+        {latex_weights}
+        
+        \subsection*{{Parâmetros}}
+        $\langle\sigma^2\rangle = {self.sigma2():{fmt}}$
+        
+        $\langle x \rangle = {self.x_mean():{fmt}}$
+        
+        $\langle x^2 \rangle = {self.x2_mean():{fmt}}$
+        
+        $\langle y \rangle = {self.y_mean():{fmt}}$
+        
+        $\langle xy \rangle = {self.xy_mean():{fmt}}$
+        
+        $a = {self.a():{fmt}}$
+        
+        $b = {self.b():{fmt}}$
+        
+        $\Delta a = {self.delta_a():{fmt}}$
+        
+        $\Delta b = {self.delta_b():{fmt}}$
+        """
+       # Escreve no arquivo
+        with open("wls.tex", 'w', encoding='utf-8') as f:
+            f.write(latex_template.format(conteudo=conteudo))
+
+
 
 #### Dados desse Relatório
 
@@ -121,10 +187,14 @@ linearizacao1 = Linearizacao(
     relatorio2.erro_variavel_dependente
 )
 
-linearizacao1.grafico(
-    f"Gráfico de $\\frac{{1}}{{T}}$ por $\\ln\\bigg( \\frac{{R}}{{R_0}} \\bigg)$",
-    r"$\ln \bigg( \frac{R}{R_0} \bigg)$",
-    r"$\frac{1}{T}\quad (K^{-1})$", 
-    f'Ajuste: $y = \\big[({10**4*linearizacao1.a():.2f} \pm {10**4*linearizacao1.delta_a():.2f})\\times 10^{{-4}} x + ({10**3*linearizacao1.b():.3f} \pm {10**3*linearizacao1.delta_b():.3f})\\times 10^{{-3}}\\big] K^{{-1}}$'
-    )
+# linearizacao1.grafico(
+#     f"Gráfico de $\\frac{{1}}{{T}}$ por $\\ln\\bigg( \\frac{{R}}{{R_0}} \\bigg)$",
+#     r"$\ln \bigg( \frac{R}{R_0} \bigg)$",
+#     r"$\frac{1}{T}\quad (K^{-1})$", 
+#     f'Ajuste: $y = \\big[({10**4*linearizacao1.a():.2f} \pm {10**4*linearizacao1.delta_a():.2f})\\times 10^{{-4}} x + ({10**3*linearizacao1.b():.3f} \pm {10**3*linearizacao1.delta_b():.3f})\\times 10^{{-3}}\\big] K^{{-1}}$'
+#     )
+
+
+linearizacao1.gerar_relatorio_latex_wls()
+
 
