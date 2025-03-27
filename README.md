@@ -31,12 +31,22 @@ tzdata==2025.1
 
 Além disso, é necessário possuir algum ambiente que rode o Latex. Sugiro o TeX Live para melhor compatibilidade com o português.
 
+# Como usar
+
+Para usar o gerador, é necessário, no arquivo 'gerador_de_relatorio.py', instanciar uma das classes com os dados experimentais e utilizar a função requerida.
+
+
 # Ideias futuras
 
-- Implementação do cálculo de erros com derivadas usando Sympy.
+- Implementação do cálculo de erros com derivadas usando Sympy;
+- Interface gráfica com Custom TKinter.
 
 # Show off
-
-![grafico](https://github.com/user-attachments/assets/dcf043e3-9951-407d-aa5d-fd0c652045ed)
+Arquivo gerado com pesos e parâmetros do Método dos Mínimos Quadrados Ponderados
 [wls.pdf](https://github.com/user-attachments/files/19479670/wls.pdf)
+
+Gráfico gerado com dados experimentais
+![grafico](https://github.com/user-attachments/assets/dcf043e3-9951-407d-aa5d-fd0c652045ed)
+
+Tabela gerada com dados experimentais
 ![tabela_gerada](https://github.com/user-attachments/assets/9159cd0a-99cf-40fe-9614-fa59b2d4095a)
