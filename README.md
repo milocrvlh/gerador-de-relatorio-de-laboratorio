@@ -4,7 +4,7 @@
 O código tem a finalidade de:
 
 -Fazer uma tabela dos dados experimentais fornecidos;
--Cálcular os pesos e parâmetros do Método dos Mínimos Quadrados Ponderados, podendo gerar um arquivo em latex com essas informações;
+-Calcular os pesos e parâmetros do Método dos Mínimos Quadrados Ponderados, podendo gerar um arquivo em latex com essas informações;
 -O gráfico da reta que melhor aproxima os pontos experimentais.
 
 
@@ -37,3 +37,6 @@ Além disso, é necessário possuir algum ambiente que rode o Latex. Sugiro o Te
 
 # Show off
 
+![grafico](https://github.com/user-attachments/assets/dcf043e3-9951-407d-aa5d-fd0c652045ed)
+[wls.pdf](https://github.com/user-attachments/files/19479670/wls.pdf)
+![tabela_gerada](https://github.com/user-attachments/assets/9159cd0a-99cf-40fe-9614-fa59b2d4095a)
