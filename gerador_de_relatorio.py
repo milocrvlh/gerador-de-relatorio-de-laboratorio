@@ -195,6 +195,7 @@ linearizacao1 = Linearizacao(
 #     )
 
 
-linearizacao1.gerar_relatorio_latex_wls()
+# linearizacao1.gerar_relatorio_latex_wls()
+linearizacao1.criar_tabela()
 
 
