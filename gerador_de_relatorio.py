@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from tabulate import tabulate
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 # Entrada em np arrays
 class DadosExperimentais():
@@ -12,15 +13,15 @@ class DadosExperimentais():
         self.erro_variavel_dependente = erro_variavel_dependente
 
     def criar_tabela(self):
-        # Criando o DataFrame
+        # Criando o DatFrame
         df = pd.DataFrame({
-            'Ln(R/Ro)':   self.variavel_dependente,
-            'σ_Ln(R/Ro)': self.erro_variavel_dependente,
-            '1/T': self.variavel_livre,
-            'σ_1/T': self.erro_variavel_livre,
+            'P_man':   self.variavel_dependente,
+            'σ_p_man': self.erro_variavel_dependente,
+            '1/h': self.variavel_livre,
+            'σ_1/h': self.erro_variavel_livre,
         })
         # Formatação com tabulate
-        tabela_formatada = tabulate(df, headers='keys', tablefmt='grid', showindex=False, floatfmt=".10f")
+        tabela_formatada = tabulate(df, headers='keys', tablefmt='grid', showindex=False, floatfmt=".4f")
 
         # Exibindo a tabela formatada
         print(tabela_formatada)
@@ -73,58 +74,90 @@ class Linearizacao(DadosExperimentais):
         print(f'y = ({self.a()} +- {self.delta_a()})x + ({self.b()}+-{self.delta_b()})')
 
     def grafico(self, titulo, xlabel, ylabel, label):
-        # Gera pontos para a reta ajustada
+        plt.rcParams['text.usetex'] = True
+        plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}'
+        # --- 1. Configuração inicial ---
+        fig, ax = plt.subplots(figsize=(9, 6.5)) # Proporção próxima de 9x6
+
+        # --- Plotagem dos dados ---
         x_fit = np.linspace(min(self.variavel_livre), max(self.variavel_livre), 100)
         y_fit = self.a() * x_fit + self.b()
 
-        plt.rcParams['text.usetex'] = True
-        plt.figure(figsize=(8.67,5.94))
-        plt.errorbar(self.variavel_livre, self.variavel_dependente, xerr=self.erro_variavel_livre, yerr=self.erro_variavel_dependente, fmt='o', label='Pontos experimentais')
-        plt.plot(x_fit, y_fit, 'r-', label=label)
-        plt.xlabel(xlabel)
-        plt.ylabel(ylabel)
-        plt.title(titulo)
-        plt.legend()
-        plt.grid()
-        plt.subplots_adjust(left=0.14, right=0.92, bottom=0.15, top=0.90)
-        plt.savefig("grafico.png", dpi=1000, bbox_inches='tight', pad_inches=1) 
-        plt.show()
-    
-    
-    def gerar_relatorio_latex_wls(self, fmt=".5e"):
+        ax.errorbar(self.variavel_livre, self.variavel_dependente,
+                    xerr=self.erro_variavel_livre, yerr=self.erro_variavel_dependente,
+                    fmt='o', color='black', ecolor='gray', capsize=2, zorder=10, label='Pontos experimentais')
+        ax.plot(x_fit, y_fit, 'r-', zorder=5, label=label)
 
-        latex_template = """
-        %
+        # --- 2. Lógica da Grade Personalizada (9x6 quadrados) ---
+        # Defina o espaçamento FIXO e "arredondado" para as grades.
+        major_spacing_x = 0.01
+        minor_spacing_x = 0.001  # 1/10 do principal
+        major_spacing_y = 0.1
+        minor_spacing_y = 0.01   # 1/10 do principal
+
+        # Aplica as marcações com base no espaçamento fixo
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(major_spacing_x))
+        ax.xaxis.set_minor_locator(ticker.MultipleLocator(minor_spacing_x))
+        ax.yaxis.set_major_locator(ticker.MultipleLocator(major_spacing_y))
+        ax.yaxis.set_minor_locator(ticker.MultipleLocator(minor_spacing_y))
+
+        # Estiliza a grade
+        ax.grid(which='major', color='#B22222', linestyle='-', linewidth=0.7)
+        ax.grid(which='minor', color='#FA8072', linestyle=':', linewidth=0.5)
+
+        # --- 3. Configurações finais e LIMITES MANUAIS ---
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(titulo)
+        ax.legend()
+
+        # Define os limites dos eixos MANUALMENTE para criar a grade 9x6
+        ax.set_xlim(0.06, 0.15)  # 9 seções de 0.01 (0.15 - 0.06 = 0.09)
+        ax.set_ylim(0, 0.6)      # 6 seções de 0.1  (0.6 - 0.0 = 0.6)
+
+        fig.tight_layout()
+        plt.savefig("grafico_milimetrado_9x6.png", dpi=300)
+        plt.show()
+
+
+    def gerar_relatorio_latex_wls(self, fmt=".5f"):
+        # Função auxiliar para formatar os números para LaTeX
+        def format_latex(numero):
+            # Formata em notação científica padrão do Python (ex: 1.23456e+02)
+            num_str = f"{numero:.5e}"
+            # Substitui 'e' pela sintaxe LaTeX
+            if 'e' in num_str:
+                base, expoente = num_str.split('e')
+                # Retorna no formato LaTeX: 1.23456 \times 10^{2}
+                return fr"{float(base):{fmt}} \times 10^{{{int(expoente)}}}"
+            return f"{numero:{fmt}}"
+
+        latex_template = """% !TeX root = wls.tex
         \\documentclass[12pt]{{article}} % Especifica o tamanho da fonte
 
         %%----------------PACOTES-------------------------------------------%%
-        \\usepackage[margin=1in]{{geometry}} % Define todas as margens em 1 polegada
-        \\usepackage[pdftex]{{graphicx}} % Permite a inclusão de arquivos de imagem
-        \\usepackage{{amssymb}} % Acesso a símbolos matemáticos extras
-        \\usepackage{{amsmath}} % Acesso a símbolos matemáticos extras
-        \\usepackage{{wrapfig}} % Permite o texto envolver figuras
-        \\usepackage{{calc}} % Dá acesso a uma calculadora básica 
-        %%-------------------------------------------------------------------%%
+        \\usepackage[a4paper,margin=1in]{{geometry}} % Define todas as margens em 1 polegada
+        \\usepackage{{graphicx}} % Permite a inclusão de arquivos de imagem
+        \\usepackage{{amsmath}} % Permite o uso de símbolos matemáticos avançados
+        \\usepackage{{amssymb}} % Permite o uso de símbolos matemáticos
         %%-----------FORMATAÇÃO----------------------------------------------%%
-        \\pagestyle{{empty}} % Garante que nenhum número de página seja impresso
-        \\parskip = 0.2 in % Coloca um pouco de espaço entre parágrafos 
-        \\parindent = 0.0 in % Garante que não haja indentação para parágrafos
+
         %%-------------------------------------------------------------------%%
 
         \\begin{{document}}
 
         {conteudo}
 
-        \\end{{document}} 
-        %%-------------------------------------------------------------------%%
-
+        \\end{{document}}
         """
 
-        # Gera o conteúdo LaTeX
+        # Gera a lista de pesos já formatada para LaTeX
         latex_weights = " \\\\\n".join(
-            [fr"$\frac{{1}}{{\sigma^2_{{{i}}}}} = {weight:{fmt}}$" 
+            [fr"$\frac{{1}}{{\sigma^2_{{{i}}}}} = {format_latex(weight)}$"
              for i, weight in enumerate(self.weights(), start=1)]
-        )        
+        )
+
+        # Gera o conteúdo principal, incluindo o gráfico
         conteudo = fr"""
         \section*{{Resultado do WLS}}
 
@@ -132,25 +165,26 @@ class Linearizacao(DadosExperimentais):
         {latex_weights}
         
         \subsection*{{Parâmetros}}
-        $\langle\sigma^2\rangle = {self.sigma2():{fmt}}$
+        $\langle\sigma^2\rangle = {format_latex(self.sigma2())}$
         
-        $\langle x \rangle = {self.x_mean():{fmt}}$
+        $\langle x \rangle = {format_latex(self.x_mean())}$
         
-        $\langle x^2 \rangle = {self.x2_mean():{fmt}}$
+        $\langle x^2 \rangle = {format_latex(self.x2_mean())}$
         
-        $\langle y \rangle = {self.y_mean():{fmt}}$
+        $\langle y \rangle = {format_latex(self.y_mean())}$
         
-        $\langle xy \rangle = {self.xy_mean():{fmt}}$
+        $\langle xy \rangle = {format_latex(self.xy_mean())}$
         
-        $a = {self.a():{fmt}}$
+        $a = {format_latex(self.a())}$
         
-        $b = {self.b():{fmt}}$
+        $b = {format_latex(self.b())}$
         
-        $\Delta a = {self.delta_a():{fmt}}$
+        $\Delta a = {format_latex(self.delta_a())}$
         
-        $\Delta b = {self.delta_b():{fmt}}$
+        $\Delta b = {format_latex(self.delta_b())}$
         """
-       # Escreve no arquivo
+
+        # Escreve no arquivo
         with open("wls.tex", 'w', encoding='utf-8') as f:
             f.write(latex_template.format(conteudo=conteudo))
 
@@ -158,28 +192,19 @@ class Linearizacao(DadosExperimentais):
 
 #### Dados desse Relatório
 
-temperatura_celsius = np.array([27, 81, 74, 67, 62, 60, 51, 45, 41, 37, 34])
-erro_temperatura = np.array(11*[1])
-resistencia = np.array([42, 3.72, 5.02, 6.59, 8.28, 9.32, 13.59, 17.07, 20.84, 24.56, 25.70])
-erro_resistencia = np.array([
-    resistencia[i] * 0.012 + 4 * 10 **(-3)* (1 if resistencia[i] < 4 else (10 if 4 <= resistencia[i] <= 40 else 100)) for i in range(len(resistencia))
-])
+p_man = np.array([0.56, 0.49, 0.40, 0.33, 0.26, 0.20, 0.14, 0.11, 0.06])
+erro_man = np.array(len(p_man)*[0.005])
+h = np.array([i for i in range(7,16)])
+erro_h= np.array(len(h)*[0.5])
 
 #### Dados Processados
 
-inverso_temperatura_kelvin = 1/(temperatura_celsius[1:] + 273)
+inverso_h = 1/h
+erro_inverso_h = erro_h / h**2 
 
-erro_inverso_temperatura_kelvin = erro_temperatura[1:] * inverso_temperatura_kelvin ** 2
-
-
-logaritmo = np.log(resistencia[1:]/resistencia[0])
-
-erro_logaritmo = np.sqrt((erro_resistencia[1:] /resistencia[1:])**2 + (erro_resistencia[0]/resistencia[0])**2)
-
-
-
-relatorio2 = DadosExperimentais(logaritmo, erro_logaritmo,inverso_temperatura_kelvin, erro_inverso_temperatura_kelvin)
-
+################
+relatorio2 = DadosExperimentais(inverso_h, erro_inverso_h, p_man, erro_man)
+ 
 linearizacao1 = Linearizacao(
     relatorio2.variavel_livre,
     relatorio2.erro_variavel_livre,
@@ -187,15 +212,14 @@ linearizacao1 = Linearizacao(
     relatorio2.erro_variavel_dependente
 )
 
-# linearizacao1.grafico(
-#     f"Gráfico de $\\frac{{1}}{{T}}$ por $\\ln\\bigg( \\frac{{R}}{{R_0}} \\bigg)$",
-#     r"$\ln \bigg( \frac{R}{R_0} \bigg)$",
-#     r"$\frac{1}{T}\quad (K^{-1})$", 
-#     f'Ajuste: $y = \\big[({10**4*linearizacao1.a():.2f} \pm {10**4*linearizacao1.delta_a():.2f})\\times 10^{{-4}} x + ({10**3*linearizacao1.b():.3f} \pm {10**3*linearizacao1.delta_b():.3f})\\times 10^{{-3}}\\big] K^{{-1}}$'
-#     )
-
+linearizacao1.grafico(
+    f"Grafico",
+    r"variavel livre",
+    r"variavel dependente", 
+    f'Ajuste: $y = \\big[({10**4*linearizacao1.a():.2f} \\pm {10**4*linearizacao1.delta_a():.2f})\\times 10^{{-4}} x + ({10**3*linearizacao1.b():.3f} \\pm {10**3*linearizacao1.delta_b():.3f})\\times 10^{{-3}}\\big] K^{{-1}}$'
+)
 
 # linearizacao1.gerar_relatorio_latex_wls()
-linearizacao1.criar_tabela()
+# linearizacao1.criar_tabela()
 
 

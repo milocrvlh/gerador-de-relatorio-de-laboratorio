@@ -1,8 +1,9 @@
 #!/bin/bash
 
-echo "Gerando Exercícios"
-python gerador_de_relatorio
+echo "Gerando dados e gráfico com Python"
+python gerador_de_relatorio.py 
 
-echo "Parafernalha do Latex"
-latex wls.tex
-dvipdfm wls.dvi
+echo "Compilando o relatório com pdflatex"
+pdflatex wls.tex
+
+echo "Compilação concluída! Verifique o arquivo wls.pdf"
